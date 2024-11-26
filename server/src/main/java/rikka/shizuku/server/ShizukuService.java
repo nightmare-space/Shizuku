@@ -118,7 +118,7 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
             }
         });
 
-        BinderSender.register(this);
+//        BinderSender.register(this);
 
         mainHandler.post(() -> {
             sendBinderToClient();
