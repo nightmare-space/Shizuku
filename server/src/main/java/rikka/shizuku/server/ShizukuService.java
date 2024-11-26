@@ -118,6 +118,7 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
             }
         });
 
+        // TODO 为啥阻塞了
 //        BinderSender.register(this);
 
         mainHandler.post(() -> {
