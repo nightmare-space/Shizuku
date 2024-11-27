@@ -172,6 +172,7 @@ public class BinderSender {
     public static void register(ShizukuService shizukuService) {
         sShizukuService = shizukuService;
 
+
         try {
             ActivityManagerApis.registerProcessObserver(new ProcessObserver());
         } catch (Throwable tr) {

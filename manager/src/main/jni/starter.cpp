@@ -10,11 +10,13 @@
 #include <cerrno>
 #include <string_view>
 #include <termios.h>
+#include <sys/wait.h>
 #include "android.h"
 #include "misc.h"
 #include "selinux.h"
 #include "cgroup.h"
 #include "logging.h"
+#include <thread>
 
 #ifdef DEBUG
 #define JAVA_DEBUGGABLE
@@ -30,9 +32,10 @@
 #define EXIT_FATAL_KILL 9
 #define EXIT_FATAL_BINDER_BLOCKED_BY_SELINUX 10
 
-#define PACKAGE_NAME "moe.shizuku.privileged.api"
-#define SERVER_NAME "shizuku_server"
+#define PACKAGE_NAME "com.nightmare.sula"
+#define SERVER_NAME "sula_server"
 #define SERVER_CLASS_PATH "rikka.shizuku.server.ShizukuService"
+#define APPLIB_SERVER_CLASS_PATH "com.nightmare.applib.AppServer"
 
 #if defined(__arm__)
 #define ABI "armeabi-v7a"
@@ -87,7 +90,7 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
         ARG_PUSH(v, "-agentlib:jdwp=transport=dt_android_adb,suspend=n,server=y"); \
     }
 #else
-#define ARG_PUSH_DEBUG_VM_PARAMS(v)
+    #define ARG_PUSH_DEBUG_VM_PARAMS(v)
 #define ARG_PUSH_DEBUG_ONLY(v, arg)
 #endif
 
@@ -106,7 +109,6 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
     ARG_END(argv)
 
     LOGD("exec app_process");
-
     if (execvp((const char *) argv[0], argv)) {
         exit(EXIT_FATAL_APP_PROCESS);
     }
@@ -114,8 +116,18 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
 
 static void start_server(const char *path, const char *main_class, const char *process_name) {
     if (daemon(false, false) == 0) {
-        LOGD("child");
-        run_server(path, main_class, process_name);
+        LOGI("info: child\n");
+        pid_t pid = fork();
+        if (pid == 0) {
+            // 子进程运行 run_server
+            run_server(path, main_class, process_name);
+        } else if (pid > 0) {
+            // 父进程运行 run_server(applib)
+            run_server(path, APPLIB_SERVER_CLASS_PATH, process_name);
+        } else {
+            perrorf("fatal: can't fork\n");
+            exit(EXIT_FATAL_FORK);
+        }
     } else {
         perrorf("fatal: can't fork\n");
         exit(EXIT_FATAL_FORK);
@@ -242,7 +254,8 @@ int starter_main(int argc, char *argv[]) {
         if (kill(pid, SIGKILL) == 0)
             printf("info: killed %d (%s)\n", pid, name);
         else if (errno == EPERM) {
-            perrorf("fatal: can't kill %d, please try to stop existing Shizuku from app first.\n", pid);
+            perrorf("fatal: can't kill %d, please try to stop existing Shizuku from app first.\n",
+                    pid);
             exit(EXIT_FATAL_KILL);
         } else {
             printf("warn: failed to kill %d (%s)\n", pid, name);
@@ -273,6 +286,7 @@ int starter_main(int argc, char *argv[]) {
     }
 
     printf("info: apk path is %s\n", apk_path);
+    printf("Lin\n");
     if (access(apk_path, R_OK) != 0) {
         perrorf("fatal: can't access manager %s\n", apk_path);
         exit(EXIT_FATAL_PM_PATH);
