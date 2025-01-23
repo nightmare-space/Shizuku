@@ -99,6 +99,14 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
         waitSystemService(Context.ACTIVITY_SERVICE);
         waitSystemService(Context.USER_SERVICE);
         waitSystemService(Context.APP_OPS_SERVICE);
+        Object packageS = ServiceManager.getService("package");
+        Object activityS = ServiceManager.getService(Context.ACTIVITY_SERVICE);
+        Object userS = ServiceManager.getService(Context.USER_SERVICE);
+        Object appOpsS = ServiceManager.getService(Context.APP_OPS_SERVICE);
+        LOGGER.i("PackageManager: %s", packageS);
+        LOGGER.i("ActivityManager: %s", activityS);
+        LOGGER.i("UserManager: %s", userS);
+        LOGGER.i("AppOpsManager: %s", appOpsS);
 
         ApplicationInfo ai = getManagerApplicationInfo();
         if (ai == null) {
@@ -118,12 +126,14 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
             }
         });
 
-
         // TODO 为啥阻塞了
-//        BinderSender.register(this);
+        BinderSender.register(this);
+
+        LOGGER.i("BinderSender.register done");
 
         mainHandler.post(() -> {
-            sendBinderToClient();
+//            sendBinderToClient();
+            LOGGER.i("invoke sendBinderToManager");
             sendBinderToManager();
         });
     }
@@ -328,7 +338,7 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
         }
     }
 
-    private int  getFlagsForUidInternal(int uid, int mask, boolean allowRuntimePermission) {
+    private int getFlagsForUidInternal(int uid, int mask, boolean allowRuntimePermission) {
         ShizukuConfig.PackageEntry entry = configManager.find(uid);
         if (entry != null) {
             return entry.flags & mask;
@@ -511,7 +521,7 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
             LOGGER.e(tr, "Failed to add %d:%s to power save temp whitelist", userId, packageName);
         }
 
-        String name = packageName + ".shizuku";
+        String name = packageName + ".shizuku.variety";
         IContentProvider provider = null;
 
         /*

@@ -35,7 +35,7 @@
 #define PACKAGE_NAME "com.nightmare.sula"
 #define SERVER_NAME "sula_server"
 #define SERVER_CLASS_PATH "rikka.shizuku.server.ShizukuService"
-#define APPLIB_SERVER_CLASS_PATH "com.nightmare.applib.AppServer"
+#define APPLIB_SERVER_CLASS_PATH "com.nightmare.aas_integrated.AASIntegrate"
 
 #if defined(__arm__)
 #define ABI "armeabi-v7a"
@@ -105,6 +105,10 @@ v_current = (uintptr_t) v + v_size - sizeof(char *); \
     ARG_PUSH(argv, "/system/bin")
     ARG_PUSH_FMT(argv, "--nice-name=%s", process_name)
     ARG_PUSH(argv, main_class)
+    // 判断如果main_class是APPLIB_SERVER_CLASS_PATH
+    if (strcmp(main_class, APPLIB_SERVER_CLASS_PATH) == 0) {
+        ARG_PUSH(argv, "sula")
+    }
     ARG_PUSH_DEBUG_ONLY(argv, "--debug")
     ARG_END(argv)
 
@@ -120,10 +124,10 @@ static void start_server(const char *path, const char *main_class, const char *p
         pid_t pid = fork();
         if (pid == 0) {
             // 子进程运行 run_server
-            run_server(path, main_class, process_name);
+            run_server(path, main_class, SERVER_NAME);
         } else if (pid > 0) {
             // 父进程运行 run_server(applib)
-            run_server(path, APPLIB_SERVER_CLASS_PATH, process_name);
+            run_server(path, APPLIB_SERVER_CLASS_PATH, SERVER_NAME);
         } else {
             perrorf("fatal: can't fork\n");
             exit(EXIT_FATAL_FORK);
@@ -308,7 +312,7 @@ int main(int argc, char **argv) {
 
     LOGD("applet %s", base.data());
 
-    constexpr const char *applet_names[] = {"shizuku_starter", nullptr};
+    constexpr const char *applet_names[] = {"sula_starter", nullptr};
 
     for (int i = 0; applet_names[i]; ++i) {
         if (base == applet_names[i]) {

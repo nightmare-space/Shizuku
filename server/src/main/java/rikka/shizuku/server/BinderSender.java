@@ -171,26 +171,33 @@ public class BinderSender {
 
     public static void register(ShizukuService shizukuService) {
         sShizukuService = shizukuService;
-
-
+        LOGGER.i("register");
         try {
+            LOGGER.i("invoke ActivityManagerApis.registerProcessObserver");
             ActivityManagerApis.registerProcessObserver(new ProcessObserver());
+            LOGGER.i("invoke ActivityManagerApis.registerProcessObserver done");
         } catch (Throwable tr) {
             LOGGER.e(tr, "registerProcessObserver");
         }
 
+        LOGGER.i("invoke ActivityManagerApis.registerProcessObserver done1");
         if (Build.VERSION.SDK_INT >= 26) {
-            int flags = UID_OBSERVER_GONE | UID_OBSERVER_IDLE | UID_OBSERVER_ACTIVE;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                flags |= UID_OBSERVER_CACHED;
-            }
-            try {
-                ActivityManagerApis.registerUidObserver(new UidObserver(), flags,
-                        ActivityManagerHidden.PROCESS_STATE_UNKNOWN,
-                        null);
-            } catch (Throwable tr) {
-                LOGGER.e(tr, "registerUidObserver");
-            }
+            LOGGER.i("invoke ActivityManagerApis.registerProcessObserver done1.1");
+            LOGGER.i("invoke ActivityManagerApis.registerProcessObserver done1.1.2");
+//            int flags = UID_OBSERVER_GONE | UID_OBSERVER_IDLE | UID_OBSERVER_ACTIVE;
+            LOGGER.i("invoke ActivityManagerApis.registerProcessObserver done2");
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+//                flags |= UID_OBSERVER_CACHED;
+//            }
+//            try {
+//                LOGGER.i("invoke ActivityManagerApis.registerUidObserver");
+//                ActivityManagerApis.registerUidObserver(new UidObserver(), flags,
+//                        ActivityManagerHidden.PROCESS_STATE_UNKNOWN,
+//                        null);
+//                LOGGER.i("invoke ActivityManagerApis.registerUidObserver done");
+//            } catch (Throwable tr) {
+//                LOGGER.e(tr, "registerUidObserver");
+//            }
         }
     }
 }
